@@ -146,7 +146,7 @@ class ElasticSearch implements AuditDriver
         $params = [
             'index' => $this->index,
             'type' => $this->type,
-            'id' => Uuid::uuid4(),
+            'id' => (string) Uuid::uuid4(),
             'body' => $model
         ];
 

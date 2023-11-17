@@ -1,5 +1,5 @@
 {
-    "name": "igoooor/laravel-auditing-elasticsearch",
+    "name": "siabit/laravel-auditing-elasticsearch",
     "description": "A elasticsearch driver for the owen-it/laravel-auditing package. Allows storage of the audits in elasticsearch.",
     "keywords": [
         "accountability",

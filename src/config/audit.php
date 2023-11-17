@@ -149,7 +149,6 @@ return [
                 ]
             ],
             'index' => env('AUDIT_INDEX', 'laravel_auditing'),
-            'type' => env('AUDIT_TYPE', 'audits')
         ]
     ],
 

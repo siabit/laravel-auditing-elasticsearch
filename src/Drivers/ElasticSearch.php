@@ -15,9 +15,9 @@ namespace Iconscout\Auditing\Drivers;
 
 use Carbon\Carbon;
 use Elasticsearch\ClientBuilder;
-use Illuminate\Support\Facades\Config;
-use Iconscout\Auditing\Jobs\AuditIndexQueuedModels;
 use Iconscout\Auditing\Jobs\AuditDeleteQueuedModels;
+use Iconscout\Auditing\Jobs\AuditIndexQueuedModels;
+use Illuminate\Support\Facades\Config;
 use OwenIt\Auditing\Contracts\Audit;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Contracts\AuditDriver;
@@ -37,18 +37,12 @@ class ElasticSearch implements AuditDriver
     protected $index = null;
 
     /**
-     * @var string
-     */
-    protected $type = null;
-
-    /**
      * ElasticSearch constructor.
      */
     public function __construct()
     {
         $this->client = ClientBuilder::create()->setHosts(Config::get('audit.drivers.es.client.hosts', ['localhost:9200']))->build();
         $this->index = Config::get('audit.drivers.es.index', 'laravel_auditing');
-        $this->type = Config::get('audit.drivers.es.type', 'audits');
     }
 
     /**
@@ -61,9 +55,9 @@ class ElasticSearch implements AuditDriver
     public function audit(Auditable $model): Audit
     {
         $implementation = Config::get('audit.implementation', AuditModel::class);
-        
+
         $this->storeAudit($model->toAudit());
-        
+
         return new $implementation;
     }
 
@@ -90,7 +84,7 @@ class ElasticSearch implements AuditDriver
         if (Config::get('audit.queue', false)) {
             return $this->indexQueueAuditDocument($model);
         }
-        
+
         return $this->indexAuditDocument($model);
     }
 
@@ -108,7 +102,7 @@ class ElasticSearch implements AuditDriver
         if (Config::get('audit.queue', false)) {
             return $this->deleteQueueAuditDocument($model);
         }
-        
+
         return $this->deleteAuditDocument($model);
     }
 
@@ -145,7 +139,6 @@ class ElasticSearch implements AuditDriver
     {
         $params = [
             'index' => $this->index,
-            'type' => $this->type,
             'id' => (string) Uuid::uuid4(),
             'body' => $model
         ];
@@ -161,7 +154,6 @@ class ElasticSearch implements AuditDriver
 
         $params = [
             'index' => $this->index,
-            'type' => $this->type,
             'size' => 10000 - $skip,
             'from' => $skip,
             'body' => [
@@ -199,18 +191,17 @@ class ElasticSearch implements AuditDriver
 
         if (count($audits)) {
             $audit_ids = array_column($audits, '_id');
-            
+
             foreach ($audit_ids as $audit_id) {
                 $params['body'][] = [
                     'delete' => [
                         '_index' => $this->index,
-                        '_type' => $this->type,
                         '_id' => $audit_id
                     ]
                 ];
 
             }
-            
+
             return (bool) $this->client->bulk($params);
         }
 
@@ -270,72 +261,69 @@ class ElasticSearch implements AuditDriver
     {
         $params = [
             'index' => $this->index,
-            'type' => $this->type,
             'body' => [
-                $this->type => [
-                    '_source' => [
-                        'enabled' => true
+                '_source' => [
+                    'enabled' => true
+                ],
+                'properties' => [
+                    'event' => [
+                        'type' => 'keyword',
+                        'index' => true,
                     ],
-                    'properties' => [
-                        'event' => [
-                            'type' => 'string',
-                            'index' => 'not_analyzed'
-                        ],
-                        'auditable_type' => [
-                            'type' => 'string',
-                            'index' => 'not_analyzed'
-                        ],
-                        'ip_address' => [
-                            'type' => 'string',
-                            'index' => 'not_analyzed'
-                        ],
-                        'url' => [
-                            'type' => 'string',
-                            'index' => 'not_analyzed'
-                        ],
-                        'user_agent' => [
-                            'type' => 'string',
-                            'index' => 'not_analyzed'
-                        ],
-                        'created_at' => [
-                            'type' => 'date',
-                            'format' => 'yyyy-MM-dd HH:mm:ss'
-                        ],
-                        'new_values' => [
-                            'properties' => [
-                                'created_at' => [
-                                    'type' => 'date',
-                                    'format' => 'yyyy-MM-dd HH:mm:ss'
-                                ],
-                                'updated_at' => [
-                                    'type' => 'date',
-                                    'format' => 'yyyy-MM-dd HH:mm:ss'
-                                ],
-                                'deleted_at' => [
-                                    'type' => 'date',
-                                    'format' => 'yyyy-MM-dd HH:mm:ss'
-                                ]
-                            ]
-                        ],
-                        'old_values' => [
-                            'properties' => [
-                                'created_at' => [
-                                    'type' => 'date',
-                                    'format' => 'yyyy-MM-dd HH:mm:ss'
-                                ],
-                                'updated_at' => [
-                                    'type' => 'date',
-                                    'format' => 'yyyy-MM-dd HH:mm:ss'
-                                ],
-                                'deleted_at' => [
-                                    'type' => 'date',
-                                    'format' => 'yyyy-MM-dd HH:mm:ss'
-                                ]
-                            ]
+                    'auditable_type' => [
+                        'type' => 'keyword',
+                        'index' => true,
+                    ],
+                    'ip_address' => [
+                        'type' => 'keyword',
+                        'index' => true,
+                    ],
+                    'url' => [
+                        'type' => 'keyword',
+                        'index' => true,
+                    ],
+                    'user_agent' => [
+                        'type' => 'keyword',
+                        'index' => true,
+                    ],
+                    'created_at' => [
+                        'type' => 'date',
+                        'format' => 'yyyy-MM-dd HH:mm:ss',
+                    ],
+                    'new_values' => [
+                        'properties' => [
+                            'created_at' => [
+                                'type' => 'date',
+                                'format' => 'yyyy-MM-dd HH:mm:ss',
+                            ],
+                            'updated_at' => [
+                                'type' => 'date',
+                                'format' => 'yyyy-MM-dd HH:mm:ss',
+                            ],
+                            'deleted_at' => [
+                                'type' => 'date',
+                                'format' => 'yyyy-MM-dd HH:mm:ss',
+                            ],
                         ]
-                    ]
-                ]
-            ]
+                    ],
+                    'old_values' => [
+                        'properties' => [
+                            'created_at' => [
+                                'type' => 'date',
+                                'format' => 'yyyy-MM-dd HH:mm:ss',
+                            ],
+                            'updated_at' => [
+                                'type' => 'date',
+                                'format' => 'yyyy-MM-dd HH:mm:ss',
+                            ],
+                            'deleted_at' => [
+                                'type' => 'date',
+                                'format' => 'yyyy-MM-dd HH:mm:ss',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         return $this->client->indices()->putMapping($params);

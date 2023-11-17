@@ -20,13 +20,6 @@
         "es"
     ],
     "type": "package",
-    "repositories": [
-        {
-            "packagist.org": false,
-            "type": "vcs",
-            "url": "https://github.com/rankarpan/laravel-auditing"
-        }
-    ],
     "license": "MIT",
     "support": {
         "issues": "https://github.com/iconscout/laravel-auditing-elasticsearch/issues",

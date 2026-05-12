@@ -33,7 +33,7 @@
     ],
     "require": {
         "php": ">=7.0",
-        "owen-it/laravel-auditing": "^v13.5",
+        "owen-it/laravel-auditing": "^13.5 || ^14.0.1",
         "elasticsearch/elasticsearch": "7.*"
     },
     "autoload": {
